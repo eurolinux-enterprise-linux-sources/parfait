@@ -1,0 +1,12 @@
+lib
+target
+.idea
+.project
+.metadata
+.settings
+.classpath
+release.properties
+*.releaseBackup
+*.class
+*.iml
+*.swp

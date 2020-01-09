@@ -1,0 +1,322 @@
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/PollingMonitoredValue.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/PollingMonitoredValue.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/PollingMonitoredValue.java	2017-10-03 11:38:15.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/PollingMonitoredValue.java	2017-10-06 13:35:06.169481799 +1100
+@@ -29,7 +29,7 @@ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import com.google.common.annotations.VisibleForTesting;
+-import com.google.common.base.MoreObjects;
++//import com.google.common.base.MoreObjects;
+ import com.google.common.base.Preconditions;
+ import com.google.common.base.Supplier;
+ 
+@@ -104,10 +104,10 @@ public class PollingMonitoredValue<T> ex
+ 		scheduler.schedule(new PollerTask(), updateInterval);
+ 	}
+ 
+-    @Override
+-    public String toString() {
+-        return MoreObjects.toStringHelper(this).add("name", getName()).add("description", getDescription()).add("poller", poller).toString();
+-    }
++//    @Override
++//    public String toString() {
++//        return MoreObjects.toStringHelper(this).add("name", getName()).add("description", getDescription()).add("poller", poller).toString();
++//    }
+ 
+ 
+     private class PollerTask extends TimerTask {
+diff -Naurp parfait-0.5.3.orig/parfait-jmx/src/main/java/io/pcp/parfait/jmx/JmxView.java parfait-0.5.3/parfait-jmx/src/main/java/io/pcp/parfait/jmx/JmxView.java
+--- parfait-0.5.3.orig/parfait-jmx/src/main/java/io/pcp/parfait/jmx/JmxView.java	2017-10-03 11:44:14.000000000 +1100
++++ parfait-0.5.3/parfait-jmx/src/main/java/io/pcp/parfait/jmx/JmxView.java	1970-01-01 10:00:00.000000000 +1000
+@@ -1,150 +0,0 @@
+-/*
+- * Copyright 2009-2017 Aconex
+- *
+- * Licensed under the Apache License, Version 2.0
+- * (the "License"); you may not use this file except in compliance with
+- * the License. You may obtain a copy of the License at:
+- *
+- * http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+- * implied.  See the License for the specific language governing
+- * permissions and limitations under the License.
+- */
+-
+-package io.pcp.parfait.jmx;
+-
+-import io.pcp.parfait.Monitor;
+-import io.pcp.parfait.Monitorable;
+-import io.pcp.parfait.MonitoringView;
+-import com.google.common.base.MoreObjects;
+-import org.springframework.jmx.export.annotation.ManagedAttribute;
+-import org.springframework.jmx.export.annotation.ManagedResource;
+-
+-import javax.management.openmbean.CompositeData;
+-import javax.management.openmbean.CompositeDataSupport;
+-import javax.management.openmbean.CompositeType;
+-import javax.management.openmbean.OpenDataException;
+-import javax.management.openmbean.OpenType;
+-import javax.management.openmbean.SimpleType;
+-import java.util.Collection;
+-import java.util.HashMap;
+-import java.util.Map;
+-import java.util.concurrent.atomic.AtomicInteger;
+-import java.util.concurrent.atomic.AtomicLong;
+-
+-@ManagedResource
+-public class JmxView implements MonitoringView {
+-    private String[] jmxMonitoredNames;
+-    private Object[] jmxMonitoredValues;
+-    private Map<String, Integer> jmxArrayIndexMap;
+-    private CompositeType monitoredType;
+-
+-    private final Monitor monitor = new JmxUpdatingMonitor();
+-    private volatile boolean started;
+-
+-
+-    @Override
+-    public void startMonitoring(Collection<Monitorable<?>> monitorables) {
+-        setupJmxValues(monitorables);
+-        for (Monitorable<?> monitorable : monitorables) {
+-            updateData(monitorable);
+-            monitorable.attachMonitor(monitor);
+-        }
+-        this.started = true;
+-    }
+-
+-    @Override
+-    public void stopMonitoring(Collection<Monitorable<?>> monitorables) {
+-        for (Monitorable<?> monitorable : monitorables) {
+-            monitorable.removeMonitor(monitor);
+-        }
+-        this.started = false;
+-    }
+-
+-    @Override
+-    public boolean isRunning() {
+-        return started;
+-    }
+-
+-    private void setupJmxValues(Collection<Monitorable<?>> monitorables) {
+-        if (monitorables.isEmpty()) {
+-            return;
+-        }
+-        try {
+-            jmxMonitoredNames = new String[monitorables.size()];
+-            String[] descriptions = new String[monitorables.size()];
+-            jmxMonitoredValues = new Object[monitorables.size()];
+-            OpenType<?>[] types = new OpenType<?>[monitorables.size()];
+-            jmxArrayIndexMap = new HashMap<String, Integer>(monitorables.size());
+-            int index = 0;
+-
+-            for (Monitorable<?> monitorable : monitorables) {
+-                jmxMonitoredNames[index] = monitorable.getName();
+-                descriptions[index] = MoreObjects.firstNonNull(monitorable.getDescription(),
+-                        "(unknown)");
+-                types[index] = getJmxType(monitorable.getType());
+-                jmxArrayIndexMap.put(monitorable.getName(), index);
+-                index++;
+-            }
+-
+-            monitoredType = new CompositeType("Exposed PCP metrics",
+-                    "Details of all exposed PCP metrics", jmxMonitoredNames, descriptions, types);
+-        } catch (OpenDataException e) {
+-            throw new UnsupportedOperationException("Unable to configure JMX types", e);
+-        }
+-    }
+-
+-    private OpenType<?> getJmxType(Class<?> type) {
+-        if (type == Boolean.class) {
+-            return SimpleType.BOOLEAN;
+-        } else if (type == Integer.class || type == AtomicInteger.class) {
+-            return SimpleType.INTEGER;
+-        } else if (type == Long.class || type == AtomicLong.class) {
+-            return SimpleType.LONG;
+-        } else if (type == Double.class) {
+-            return SimpleType.DOUBLE;
+-        } else if (type == String.class) {
+-            return SimpleType.STRING;
+-        } else {
+-            throw new UnsupportedOperationException(
+-                    "Don't know how to process Monitorable of type [" + type + "]");
+-        }
+-    }
+-
+-    @ManagedAttribute(description = "All exposed parfait metrics")
+-    public CompositeData getExposedMetrics() {
+-        try {
+-            return new CompositeDataSupport(monitoredType, jmxMonitoredNames, jmxMonitoredValues);
+-        } catch (OpenDataException e) {
+-            throw new RuntimeException(e);
+-        }
+-    }
+-
+-    private void updateData(Monitorable<?> monitorable) {
+-        Class<?> type = monitorable.getType();
+-        Object jmxValue;
+-
+-        if (type == Boolean.class || type == Integer.class || type == Long.class
+-                || type == Double.class || type == String.class) {
+-            jmxValue = monitorable.get();
+-        } else if (type == AtomicInteger.class) {
+-            jmxValue = ((AtomicInteger) monitorable.get()).intValue();
+-        } else if (type == AtomicLong.class) {
+-            jmxValue = ((AtomicLong) monitorable.get()).longValue();
+-        } else {
+-            throw new UnsupportedOperationException(
+-                    "Don't know how to process Monitorable of type [" + type + "]");
+-        }
+-
+-        jmxMonitoredValues[jmxArrayIndexMap.get(monitorable.getName())] = jmxValue;
+-    }
+-
+-    public class JmxUpdatingMonitor implements Monitor {
+-        public void valueChanged(Monitorable<?> monitorable) {
+-            updateData(monitorable);
+-        }
+-    }
+-}
+diff -Naurp parfait-0.5.3.orig/parfait-jmx/src/test/java/io/pcp/parfait/jmx/JmxViewTest.java parfait-0.5.3/parfait-jmx/src/test/java/io/pcp/parfait/jmx/JmxViewTest.java
+--- parfait-0.5.3.orig/parfait-jmx/src/test/java/io/pcp/parfait/jmx/JmxViewTest.java	2017-10-03 11:44:14.000000000 +1100
++++ parfait-0.5.3/parfait-jmx/src/test/java/io/pcp/parfait/jmx/JmxViewTest.java	1970-01-01 10:00:00.000000000 +1000
+@@ -1,137 +0,0 @@
+-/*
+- * Copyright 2009-2017 Aconex
+- *
+- * Licensed under the Apache License, Version 2.0
+- * (the "License"); you may not use this file except in compliance with
+- * the License. You may obtain a copy of the License at:
+- *
+- * http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+- * implied.  See the License for the specific language governing
+- * permissions and limitations under the License.
+- */
+-
+-package io.pcp.parfait.jmx;
+-
+-import io.pcp.parfait.MonitorableRegistry;
+-import io.pcp.parfait.MonitoredValue;
+-import junit.framework.TestCase;
+-
+-import javax.management.openmbean.CompositeData;
+-import java.io.IOException;
+-
+-public class JmxViewTest extends TestCase {
+-    private MonitoredValue<Boolean> booleanValue = null;
+-
+-    private MonitoredValue<Integer> intValue = null;
+-
+-    private MonitoredValue<Long> longValue = null;
+-    private MonitoredValue<Double> doubleValue = null;
+-    private MonitoredValue<String> stringValue = null;
+-    
+-    private MonitorableRegistry registry = new MonitorableRegistry();
+-
+-    private JmxView jmx = null;
+-
+-    public JmxViewTest() {
+-    }
+-
+-    public void setUp() {
+-        booleanValue = new MonitoredValue<Boolean>("boolean.value", "boolean.value.desc", registry, true);
+-        intValue = new MonitoredValue<Integer>("int.value", "int.value.desc", registry, 1);
+-        longValue = new MonitoredValue<Long>("long.value", "long.value.desc", registry, 1l);
+-        doubleValue = new MonitoredValue<Double>("double.value", "double.value.desc", registry, 1d);
+-        stringValue = new MonitoredValue<String>("string.value", "string.value.desc", registry, "!");
+-
+-        jmx = new JmxView();
+-    }
+-
+-    public void tearDown() {
+-        jmx.stopMonitoring(registry.getMonitorables());
+-    }
+-
+-    public void testSupportsAllTypes() throws IOException, InterruptedException {
+-        jmx.startMonitoring(registry.getMonitorables());
+-
+-        checkDataValues();
+-
+-        booleanValue.set(false);
+-        checkDataValues();
+-
+-        booleanValue.set(true);
+-        checkDataValues();
+-
+-        intValue.set(0);
+-        checkDataValues();
+-
+-        intValue.set(Integer.MAX_VALUE);
+-        checkDataValues();
+-
+-        intValue.set(Integer.MIN_VALUE);
+-        checkDataValues();
+-
+-        intValue.set(1234567890);
+-        checkDataValues();
+-
+-        longValue.set(0l);
+-        checkDataValues();
+-
+-        longValue.set(Long.MAX_VALUE);
+-        checkDataValues();
+-
+-        longValue.set(Long.MIN_VALUE);
+-        checkDataValues();
+-
+-        longValue.set(1234567891012345679l);
+-        checkDataValues();
+-
+-        doubleValue.set(0d);
+-        checkDataValues();
+-
+-        doubleValue.set(Double.MAX_VALUE);
+-        checkDataValues();
+-
+-        doubleValue.set(Double.MIN_VALUE);
+-        checkDataValues();
+-
+-        doubleValue.set(Double.NEGATIVE_INFINITY);
+-        checkDataValues();
+-
+-        doubleValue.set(Double.POSITIVE_INFINITY);
+-        checkDataValues();
+-
+-        doubleValue.set(Double.NaN);
+-        checkDataValues();
+-
+-        doubleValue.set(1234567891.012345679d);
+-        checkDataValues();
+-
+-        stringValue.set("");
+-        checkDataValues();
+-
+-        stringValue.set(createString(500));
+-        checkDataValues();
+-    }
+-
+-    private String createString(int length) {
+-        StringBuilder sb = new StringBuilder();
+-        for (int i = 0; i < length; i++) {
+-            sb.append(Math.max(1, i & 255));
+-        }
+-        return sb.toString();
+-    }
+-
+-    private void checkDataValues() {
+-        
+-        CompositeData data = jmx.getExposedMetrics();
+-
+-        assertEquals(booleanValue.get(), data.get("boolean.value"));
+-        assertEquals(doubleValue.get(), data.get("double.value"));
+-        assertEquals((int) intValue.get(), data.get("int.value"));
+-        assertEquals((long) longValue.get(), data.get("long.value"));
+-        assertEquals(stringValue.get(), data.get("string.value"));
+-    }
+-}

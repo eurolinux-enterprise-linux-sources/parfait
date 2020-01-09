@@ -1,0 +1,238 @@
+diff -Naurp parfait-0.5.3.orig/dxm/pom.xml parfait-0.5.3/dxm/pom.xml
+--- parfait-0.5.3.orig/dxm/pom.xml	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/dxm/pom.xml	2017-10-06 11:56:57.565404760 +1100
+@@ -38,10 +38,6 @@
+       <artifactId>guava</artifactId>
+     </dependency>
+     <dependency>
+-  	<groupId>net.jcip</groupId>
+-  	<artifactId>jcip-annotations</artifactId>
+-    </dependency>
+-    <dependency>
+       <groupId>javax.measure</groupId>
+       <artifactId>unit-api</artifactId>
+     </dependency>
+diff -Naurp parfait-0.5.3.orig/dxm/src/main/java/io/pcp/parfait/dxm/PcpMmvWriter.java parfait-0.5.3/dxm/src/main/java/io/pcp/parfait/dxm/PcpMmvWriter.java
+--- parfait-0.5.3.orig/dxm/src/main/java/io/pcp/parfait/dxm/PcpMmvWriter.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/dxm/src/main/java/io/pcp/parfait/dxm/PcpMmvWriter.java	2017-10-06 11:56:57.567404741 +1100
+@@ -54,7 +54,7 @@ import io.pcp.parfait.dxm.types.DefaultT
+ import io.pcp.parfait.dxm.types.MmvMetricType;
+ import io.pcp.parfait.dxm.types.TypeHandler;
+ import com.google.common.base.Preconditions;
+-import net.jcip.annotations.GuardedBy;
++//import net.jcip.annotations.GuardedBy;
+ import org.apache.commons.lang.builder.ToStringBuilder;
+ import org.apache.commons.lang.builder.ToStringStyle;
+ 
+@@ -162,7 +162,7 @@ public class PcpMmvWriter implements Pcp
+     private volatile boolean usePerMetricLock = true;
+     private final Map<PcpValueInfo,ByteBuffer> perMetricByteBuffers = newConcurrentMap();
+     private final Object globalLock = new Object();
+-    @GuardedBy("itself")
++    //@GuardedBy("itself")
+     private volatile ByteBuffer dataFileBuffer = null;
+ 
+ 
+diff -Naurp parfait-0.5.3.orig/parfait-core/pom.xml parfait-0.5.3/parfait-core/pom.xml
+--- parfait-0.5.3.orig/parfait-core/pom.xml	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/pom.xml	2017-10-06 11:56:57.567404741 +1100
+@@ -34,10 +34,6 @@
+ 			<scope>test</scope>
+ 		</dependency>
+ 		<dependency>
+-			<groupId>net.jcip</groupId>
+-			<artifactId>jcip-annotations</artifactId>
+-		</dependency>
+-		<dependency>
+ 			<groupId>com.google.guava</groupId>
+ 			<artifactId>guava</artifactId>
+ 		</dependency>
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounterBuilder.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounterBuilder.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounterBuilder.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounterBuilder.java	2017-10-06 11:56:57.568404732 +1100
+@@ -20,7 +20,7 @@ import java.util.List;
+ 
+ import javax.measure.Unit;
+ 
+-import net.jcip.annotations.ThreadSafe;
++//import net.jcip.annotations.ThreadSafe;
+ 
+ import com.google.common.base.Supplier;
+ import com.google.common.collect.ImmutableList;
+@@ -34,7 +34,7 @@ import com.google.common.collect.Lists;
+  * create the TimeWindowCounters from scratch, or 'copy' an existing
+  * MonitoredCounter.
+  */
+-@ThreadSafe
++//@ThreadSafe
+ public class TimeWindowCounterBuilder {
+ 	private final List<TimeWindow> timeWindows;
+ 	private final Supplier<Long> timeSource;
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounter.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounter.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounter.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/TimeWindowCounter.java	2017-10-06 11:56:57.568404732 +1100
+@@ -18,8 +18,8 @@ package io.pcp.parfait;
+ 
+ import java.util.Arrays;
+ 
+-import net.jcip.annotations.GuardedBy;
+-import net.jcip.annotations.ThreadSafe;
++//import net.jcip.annotations.GuardedBy;
++//import net.jcip.annotations.ThreadSafe;
+ 
+ import com.google.common.annotations.VisibleForTesting;
+ import com.google.common.base.Supplier;
+@@ -43,15 +43,15 @@ import com.google.common.base.Supplier;
+  * prove too contentious and require change later.
+  * </p>
+  */
+-@ThreadSafe
++//@ThreadSafe
+ public class TimeWindowCounter implements Counter {
+-	@GuardedBy("lock")
++	//@GuardedBy("lock")
+ 	private long overallValue;
+-	@GuardedBy("lock")
++	//@GuardedBy("lock")
+ 	private final long[] interimValues;
+-	@GuardedBy("lock")
++	//@GuardedBy("lock")
+ 	private int headIndex = 0;
+-	@GuardedBy("lock")
++	//@GuardedBy("lock")
+ 	private long headTime;
+ 
+ 	private final Object lock = new Object();
+@@ -87,7 +87,7 @@ public class TimeWindowCounter implement
+ 	 * until headTime is within one 'tick' of the current time; we have then
+ 	 * found the correct bucket.
+ 	 */
+-	@GuardedBy("lock")
++	//@GuardedBy("lock")
+ 	private void cleanState() {
+ 		long eventTime = timeSource.get();
+ 		long bucketsToSkip = (eventTime - headTime) / window.getResolution();
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/TimeWindow.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/TimeWindow.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/TimeWindow.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/TimeWindow.java	2017-10-06 11:56:57.569404723 +1100
+@@ -16,7 +16,7 @@
+ 
+ package io.pcp.parfait;
+ 
+-import net.jcip.annotations.ThreadSafe;
++//import net.jcip.annotations.ThreadSafe;
+ 
+ import com.google.common.base.Preconditions;
+ 
+@@ -27,7 +27,7 @@ import com.google.common.base.Preconditi
+  * (the amount of time represented by each window), and a resolution (the
+  * duration at which events will be clustered together).
+  */
+-@ThreadSafe
++//@ThreadSafe
+ public final class TimeWindow {
+ 	private final int resolution;
+ 	private final long period;
+@@ -82,4 +82,4 @@ public final class TimeWindow {
+ 		// We know that bucket count fits in an int, per our constructor checks
+ 		return (int) (period / resolution);
+ 	}
+-}
+\ No newline at end of file
++}
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/timing/EventTimer.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/timing/EventTimer.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/timing/EventTimer.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/timing/EventTimer.java	2017-10-06 11:56:57.570404714 +1100
+@@ -32,13 +32,13 @@ import org.slf4j.LoggerFactory;
+ import io.pcp.parfait.MonitorableRegistry;
+ import io.pcp.parfait.MonitoredCounter;
+ import com.google.common.collect.ImmutableList;
+-import net.jcip.annotations.ThreadSafe;
++//import net.jcip.annotations.ThreadSafe;
+ 
+ /**
+  * A class to provide a {@link EventMetricCollector} to each {@link Timeable} on demand, guaranteed
+  * to be thread-safe as long is it's only ever used by the requesting thread.
+  */
+-@ThreadSafe
++//@ThreadSafe
+ public class EventTimer {
+ 
+     /**
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/timing/LoggerSink.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/timing/LoggerSink.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/timing/LoggerSink.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/timing/LoggerSink.java	2017-10-06 11:56:57.570404714 +1100
+@@ -21,14 +21,14 @@ import java.util.Map;
+ 
+ import javax.measure.Unit;
+ 
+-import net.jcip.annotations.ThreadSafe;
++//import net.jcip.annotations.ThreadSafe;
+ 
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+ import com.google.common.collect.Maps;
+ 
+-@ThreadSafe
++//@ThreadSafe
+ public class LoggerSink implements StepMeasurementSink {
+     private final Logger logger;
+     private final Map<Unit<?>, Unit<?>> normalizations = Maps.newConcurrentMap();
+diff -Naurp parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/timing/ThreadContext.java parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/timing/ThreadContext.java
+--- parfait-0.5.3.orig/parfait-core/src/main/java/io/pcp/parfait/timing/ThreadContext.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-core/src/main/java/io/pcp/parfait/timing/ThreadContext.java	2017-10-06 11:56:57.571404704 +1100
+@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHa
+ import com.google.common.cache.CacheBuilder;
+ import com.google.common.cache.CacheLoader;
+ import com.google.common.cache.LoadingCache;
+-import net.jcip.annotations.ThreadSafe;
++//import net.jcip.annotations.ThreadSafe;
+ 
+ /**
+  * <p>
+@@ -45,7 +45,7 @@ import net.jcip.annotations.ThreadSafe;
+  * 
+  * @author Cowan
+  */
+-@ThreadSafe
++//@ThreadSafe
+ public class ThreadContext {
+     private static final CacheLoader<Thread, Map<String, Object>> NEW_CONTEXT_CREATOR = new CacheLoader<Thread, Map<String, Object>>() {
+         @Override
+diff -Naurp parfait-0.5.3.orig/parfait-pcp/src/main/java/io/pcp/parfait/pcp/PcpMonitorBridge.java parfait-0.5.3/parfait-pcp/src/main/java/io/pcp/parfait/pcp/PcpMonitorBridge.java
+--- parfait-0.5.3.orig/parfait-pcp/src/main/java/io/pcp/parfait/pcp/PcpMonitorBridge.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-pcp/src/main/java/io/pcp/parfait/pcp/PcpMonitorBridge.java	2017-10-06 11:59:49.367827348 +1100
+@@ -25,7 +25,7 @@ import io.pcp.parfait.dxm.PcpWriter;
+ import io.pcp.parfait.dxm.semantics.Semantics;
+ import com.google.common.base.Preconditions;
+ import com.google.common.collect.ImmutableMap;
+-import net.jcip.annotations.NotThreadSafe;
++//import net.jcip.annotations.NotThreadSafe;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+@@ -45,7 +45,7 @@ import java.util.concurrent.ArrayBlockin
+  *
+  * @see io.pcp.parfait.QuiescentRegistryListener
+  */
+-@NotThreadSafe
++//@NotThreadSafe
+ public class PcpMonitorBridge implements MonitoringView {
+ 
+     private static final Logger LOG = LoggerFactory.getLogger(PcpMonitorBridge.class);
+diff -Naurp parfait-0.5.3.orig/pom.xml parfait-0.5.3/pom.xml
+--- parfait-0.5.3.orig/pom.xml	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/pom.xml	2017-10-06 11:56:57.571404704 +1100
+@@ -340,11 +340,6 @@
+               <version>2.2.9</version>
+           </dependency>
+           <dependency>
+-              <groupId>net.jcip</groupId>
+-              <artifactId>jcip-annotations</artifactId>
+-              <version>1.0</version>
+-          </dependency>
+-          <dependency>
+               <groupId>commons-io</groupId>
+               <artifactId>commons-io</artifactId>
+               <version>1.4</version>

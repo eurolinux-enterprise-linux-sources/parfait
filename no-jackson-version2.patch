@@ -1,0 +1,114 @@
+diff -Naurp parfait-0.5.3.orig/parfait-agent/pom.xml parfait-0.5.3/parfait-agent/pom.xml
+--- parfait-0.5.3.orig/parfait-agent/pom.xml	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-agent/pom.xml	2017-10-06 13:27:24.176598870 +1100
+@@ -147,19 +147,14 @@
+       <version>${log4j.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-core</artifactId>
+-      <version>2.8.8</version>
++      <groupId>org.codehaus.jackson</groupId>
++      <artifactId>jackson-core-asl</artifactId>
++      <version>${jackson.version}</version>
+     </dependency>
+     <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-annotations</artifactId>
+-      <version>2.8.8</version>
+-    </dependency>
+-    <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-databind</artifactId>
+-      <version>2.8.8</version>
++      <groupId>org.codehaus.jackson</groupId>
++      <artifactId>jackson-mapper-asl</artifactId>
++      <version>${jackson.version}</version>
+     </dependency>
+   </dependencies>
+ </project>
+diff -Naurp parfait-0.5.3.orig/parfait-agent/src/main/java/io/pcp/parfait/ParfaitAgent.java parfait-0.5.3/parfait-agent/src/main/java/io/pcp/parfait/ParfaitAgent.java
+--- parfait-0.5.3.orig/parfait-agent/src/main/java/io/pcp/parfait/ParfaitAgent.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-agent/src/main/java/io/pcp/parfait/ParfaitAgent.java	2017-10-06 13:26:49.945893951 +1100
+@@ -16,10 +16,10 @@
+ 
+ package io.pcp.parfait;
+ 
+-import com.fasterxml.jackson.core.JsonGenerationException;
+-import com.fasterxml.jackson.databind.JsonMappingException;
+-import com.fasterxml.jackson.databind.JsonNode;
+-import com.fasterxml.jackson.databind.ObjectMapper;
++import org.codehaus.jackson.JsonNode;
++import org.codehaus.jackson.JsonParseException;
++import org.codehaus.jackson.JsonProcessingException;
++import org.codehaus.jackson.map.ObjectMapper;
+ 
+ import io.pcp.parfait.MonitoringViewProperties;
+ import io.pcp.parfait.AgentMonitoringView;
+diff -Naurp parfait-0.5.3.orig/parfait-agent/src/main/java/io/pcp/parfait/Specification.java parfait-0.5.3/parfait-agent/src/main/java/io/pcp/parfait/Specification.java
+--- parfait-0.5.3.orig/parfait-agent/src/main/java/io/pcp/parfait/Specification.java	2017-10-06 11:45:35.000000000 +1100
++++ parfait-0.5.3/parfait-agent/src/main/java/io/pcp/parfait/Specification.java	2017-10-06 13:26:49.946893942 +1100
+@@ -16,9 +16,10 @@
+ 
+ package io.pcp.parfait;
+ 
+-import com.fasterxml.jackson.core.JsonParseException;
+-import com.fasterxml.jackson.core.JsonParser;
+-import com.fasterxml.jackson.databind.JsonNode;
++import org.codehaus.jackson.JsonNode;
++import org.codehaus.jackson.JsonParseException;
++import org.codehaus.jackson.JsonProcessingException;
++import org.codehaus.jackson.map.ObjectMapper;
+ 
+ import systems.uom.quantity.Information;
+ import tec.uom.se.unit.MetricPrefix;
+diff -Naurp parfait-0.5.3.orig/pom.xml parfait-0.5.3/pom.xml
+--- parfait-0.5.3.orig/pom.xml	2017-10-06 13:25:59.173331629 +1100
++++ parfait-0.5.3/pom.xml	2017-10-06 13:27:17.456656798 +1100
+@@ -103,6 +103,7 @@
+     <java.major.source.version>${jdk.version}</java.major.source.version>
+     <java.major.target.version>${jdk.version}</java.major.target.version>
+     <metrics3.version>1.0.2</metrics3.version>
++    <jackson.version>1.9.11</jackson.version>
+     <unit.version>1.0</unit.version>
+     <unit.se.version>1.0.4</unit.se.version>
+     <unit.systems.version>0.6</unit.systems.version>
+@@ -365,6 +366,16 @@
+               <version>${metrics3.version}</version>
+           </dependency>
+           <dependency>
++              <groupId>org.codehaus.jackson</groupId>
++              <artifactId>jackson-core-asl</artifactId>
++	      <version>${jackson.version}</version>
++          </dependency>
++          <dependency>
++              <groupId>org.codehaus.jackson</groupId>
++              <artifactId>jackson-mapper-asl</artifactId>
++              <version>${jackson.version}</version>
++          </dependency>
++          <dependency>
+               <groupId>org.hamcrest</groupId>
+               <artifactId>hamcrest-all</artifactId>
+               <version>1.3</version>
+@@ -389,21 +400,6 @@
+       <artifactId>log4j</artifactId>
+       <optional>true</optional>
+     </dependency>
+-    <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-core</artifactId>
+-      <version>2.8.8</version>
+-    </dependency>
+-    <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-annotations</artifactId>
+-      <version>2.8.8</version>
+-    </dependency>
+-    <dependency>
+-      <groupId>com.fasterxml.jackson.core</groupId>
+-      <artifactId>jackson-databind</artifactId>
+-      <version>2.8.8</version>
+-    </dependency>
+   </dependencies>
+   <repositories>
+     <repository>
